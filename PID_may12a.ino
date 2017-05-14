@@ -2,10 +2,12 @@
   #include <Servo.h>
   
   // PID Varibles
-  double In, Out, Set;
+  double In, Out;
   double K_i, K_p, K_d;
-  double err, err_D, err_I, errLast;
+  double err, err_D, err_I;
+  double errLast = 0;
   unsigned long prevTime = 0;
+  double Set = 11;
 
   // Pinout Varibles 
   int servoPin = 3;
@@ -14,9 +16,9 @@
 
   //Servos
   Servo Servo1;
-  int horizPos = 90; // the postion where the servo is hoizontal
-  int minPos = horizPos - 20; //set max and min rotation postion so that it won't break anything
-  int maxPos = horizPos + 45;
+  int horizPos = 80; // the postion where the servo is hoizontal
+  int minPos = horizPos - 10; //set max and min rotation postion so that it won't break anything
+  int maxPos = horizPos + 10;
   int newPos; // postion assigned by PID
 
   //SystemVaribles
@@ -28,6 +30,8 @@
 void setup() {
   // put your setup code here, to run once:
 
+  Serial.begin(9600);
+  
   // Assign Servo to pin
   Servo1.attach(servoPin);
 
@@ -60,12 +64,12 @@ void loop()
   {
     dist = maxDistance;
   }
-
+  In = dist;
   //the distance is now the input for the PID algorithim 
-  K_p = 6;
+  K_p = 1.3;
   K_d = 3;
   K_i = 0;
-  double Set = 15;
+
   PID();
   newPos = horizPos + Out;
   
@@ -79,13 +83,24 @@ void loop()
      newPos = minPos;
   }
 
+  Servo1.write(newPos); 
+//   delay(50); 
+// Serial.print("I");
+
+//Serial.print("err");
+  Serial.print(newPos);
+  Serial.print(" ");
+//Serial.print("eD");
+//Serial.print(err_D);
+//Serial.print(" ");
+
 }
 
 void PID() {
   //my version of a PID control algorithim
   
   // first step is to figure out the current time
-  unsigned long currTime = millis()/1000;  //millis is a built in function that returns the time ince the program started
+  unsigned long currTime = millis();  //millis is a built in function that returns the time ince the program started
                                       //currTime is an unsigned long since this varible type holds 32 bits and milliseconds have a lot of digits
   double deltaT = (double)(currTime - prevTime); // detlaT is cast as a double so save space and value shouldn't be too big
 
@@ -97,6 +112,9 @@ void PID() {
   //update these varibles for the next iteration
   errLast = err;
   prevTime = currTime;
+
+// Serial.print(currTime);
+// Serial.print(" ");
   
   //Output calcs
   Out = (K_p * err) + (K_i * err_I) + (K_d * err_D);
