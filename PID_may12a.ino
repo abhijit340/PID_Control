@@ -7,7 +7,8 @@
   double err, err_D, err_I;
   double errLast = 0;
   unsigned long prevTime = 0;
-  double Set = 11;
+  double Set = 10;
+  int sampleTime = 100; // 1/10 seconds
 
   // Pinout Varibles 
   int servoPin = 3;
@@ -66,9 +67,9 @@ void loop()
   }
   In = dist;
   //the distance is now the input for the PID algorithim 
-  K_p = 1.3;
-  K_d = 3;
-  K_i = 0;
+  K_p = 0.7;
+  K_d = 12;
+  K_i = 0.00001;
 
   PID();
   newPos = horizPos + Out;
@@ -88,8 +89,12 @@ void loop()
 // Serial.print("I");
 
 //Serial.print("err");
-  Serial.print(newPos);
-  Serial.print(" ");
+  Serial.print(prevTime);
+ Serial.print(", ");
+ Serial.print(Out);
+ Serial.print(", ");
+ Serial.print(dist);
+  Serial.println(", ");
 //Serial.print("eD");
 //Serial.print(err_D);
 //Serial.print(" ");
@@ -102,22 +107,26 @@ void PID() {
   // first step is to figure out the current time
   unsigned long currTime = millis();  //millis is a built in function that returns the time ince the program started
                                       //currTime is an unsigned long since this varible type holds 32 bits and milliseconds have a lot of digits
-  double deltaT = (double)(currTime - prevTime); // detlaT is cast as a double so save space and value shouldn't be too big
-
-  //finding the error relative to to the setpoint
-  err = Set - In;
-  err_D = (err - errLast)/deltaT;
-  err_I = err_I + (err * deltaT);
+  int deltaT = (double)(currTime - prevTime); // detlaT is cast as a double so save space and value shouldn't be too big
+  if(deltaT >= sampleTime)
+  {
+    //finding the error relative to to the setpoint
+    err = Set - In;
+    err_D = (err - errLast)/deltaT;
+    err_I = err_I + (err * deltaT);
  
-  //update these varibles for the next iteration
-  errLast = err;
-  prevTime = currTime;
+    //update these varibles for the next iteration
+    errLast = err;
+    prevTime = currTime;
 
-// Serial.print(currTime);
-// Serial.print(" ");
+  // Serial.print(currTime);
+  // Serial.print(" ");
   
-  //Output calcs
-  Out = (K_p * err) + (K_i * err_I) + (K_d * err_D);
+    //Output calcs
+    Out = (K_p * err) + (K_i * err_I) + (K_d * err_D);
+  }
+
+  
   
 
 }
